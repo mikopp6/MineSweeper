@@ -5,7 +5,7 @@ import sweeperlib
 settings = {
     "width": 16,
     "height": 16,
-    "mines": 80,
+    "mines": 40,
     "background_color": (255, 255, 255, 255),
     "window_width": 0,
     "window_height": 0
@@ -21,6 +21,7 @@ game_status = {
     "current_status": "",
     "shown_field": [],
     "hidden_field": [],
+    "mines_flagged": 0,
     "elapsed_time": 0
 }
 
@@ -28,18 +29,11 @@ def mouse_handler(x, y, button, modifiers):
     print("Mouse {} clicked in {}, {}".format(button, x, y))
     column = floor(x / 40)
     row = floor(y / 40)
-
-    if button == 1:
-        check_square(row, column)
-    if button == 4:
-        game_status["shown_field"][row][column] = "f"
-        
-
-        
-
+    if column < settings["width"] and row < settings["height"]:
+        check_square(row, column, button)
+    
 
 def draw_handler():
-    
     sweeperlib.clear_window()
     sweeperlib.draw_background()
     sweeperlib.begin_sprite_draw()
@@ -54,10 +48,17 @@ def draw_handler():
         y = settings["window_height"]-40,
         font = "roboto",
         size = 24
-    )
+    )       
 
 def interval_handler(elapsed):
     game_status["elapsed_time"] += elapsed
+    
+    if game_status["current_status"] == "good":
+        print("YOU WON")
+        sweeperlib.close()
+    if game_status["current_status"] == "bad":
+        print("YOU LOST")
+        sweeperlib.close()
 
 def create_field():
     game_status["hidden_field"] = []
@@ -80,13 +81,20 @@ def insert_mines():
         x, y = square
         game_status["hidden_field"][y][x] = "x"
         
-def check_square(row, column):
+def check_square(row, column, button):
     square = game_status["hidden_field"][row][column]
-    if square == "x":
-        game_status["shown_field"][row][column] = "x"
-    if square == " ":
-        floodfill(column, row)
-    
+    if button == 1:
+        if square == "x":
+            game_status["current_status"] = "bad"
+        elif square == " ":
+            floodfill(column, row)
+    elif button == 4:
+        game_status["shown_field"][row][column] = "f"
+        if square == "x":
+            game_status["mines_flagged"] += 1
+            if game_status["mines_flagged"] == settings["mines"]:
+                game_status["current_status"] = "good"
+
 
 def floodfill(starting_x, starting_y):
     """
@@ -95,21 +103,35 @@ def floodfill(starting_x, starting_y):
     """
 
     checklist = [(starting_x, starting_y)]
-    i = 0
+
     while checklist:
         x, y = checklist.pop()
-        game_status["shown_field"][y][x] = "0"
-        game_status["hidden_field"][y][x] = "0"
+        surrounds = count_surroundings(x, y)
+        game_status["shown_field"][y][x] = surrounds
+        game_status["hidden_field"][y][x] = surrounds
 
-        for i in range(y-1, y+2):
-            if i < 0 or i == settings["height"]:
-                continue
-            for j in range(x-1, x+2):
-                if j < 0 or j == settings["width"]:
+        if surrounds == 0:
+            for i in range(y-1, y+2):
+                if i < 0 or i == settings["height"]:
                     continue
-                elif game_status["hidden_field"][i][j] == " ":
-                    checklist.append((j, i))
-        i += 1
+                for j in range(x-1, x+2):
+                    if j < 0 or j == settings["width"]:
+                        continue
+                    elif game_status["hidden_field"][i][j] == " ":
+                        checklist.append((j, i))
+
+def count_surroundings(x, y):
+    mines = 0
+    for i in range(y-1, y+2):
+        if i < 0 or i == settings["height"]:
+            continue
+        for j in range(x-1, x+2):
+            if j < 0 or j == settings["width"]:
+                continue
+            elif game_status["hidden_field"][i][j] == "x":
+                mines += 1
+
+    return mines
 
 def main():
     sweeperlib.load_sprites("sprites")
