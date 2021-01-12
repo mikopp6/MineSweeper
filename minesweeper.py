@@ -1,11 +1,24 @@
+"""
+MineSweeper
+@author Miko Palojärvi, github.com/mikopp6
+
+Minesweeper game made with python, for University of Oulu Elementary Programming course.
+
+"""
+
 import random
+import sys
 from math import floor
 import sweeperlib
 
+# --settings and game_status--
+# Required variables for controlling game logic and state
+# Does what their name implies
+# Settings contain user defined settings
 settings = {
-    "width": 16,
-    "height": 16,
-    "mines": 40,
+    "width": 0,
+    "height": 0,
+    "mines": 0,
     "background_color": (255, 255, 255, 255),
     "window_width": 0,
     "window_height": 0
@@ -24,6 +37,7 @@ game_status = {
     "mines_flagged": 0,
     "elapsed_time": 0
 }
+
 
 def mouse_handler(x, y, button, modifiers):
     print("Mouse {} clicked in {}, {}".format(button, x, y))
@@ -55,9 +69,11 @@ def interval_handler(elapsed):
     
     if game_status["current_status"] == "good":
         print("YOU WON")
+        game_status["shown_field"] == game_status["hidden_field"]
         sweeperlib.close()
     if game_status["current_status"] == "bad":
         print("YOU LOST")
+        game_status["shown_field"] == game_status["hidden_field"]
         sweeperlib.close()
 
 def create_field():
@@ -133,7 +149,59 @@ def count_surroundings(x, y):
 
     return mines
 
-def main():
+def menu():
+    while True:
+        print("----------------MineSweeper----------------")
+        print("(N)ew game")
+        print("(S)tats")
+        print("(Q)uit")
+        choice = input("Choose: ").strip().lower()
+        if choice == "n":
+            game()
+        elif choice == "s":
+            stats()
+        elif choice == "q":
+            print("Thanks for playing!")
+            break
+        else:
+            print("Incorrect choice")
+
+def game():
+    while True:
+        print("\nDifficulty?")
+        print("(E)asy - 9x9, 10 mines")
+        print("(M)edium - 16x16, 40 mines")
+        print("(H)ard - 16x30, 99 mines")
+        print("(C)ustom")
+        difficulty = input("Choose: ").strip().lower()
+        if difficulty == "e":
+            settings["width"] = 9
+            settings["height"] = 9
+            settings["mines"] = 10
+            break
+        elif difficulty == "m":
+            settings["width"] = 16
+            settings["height"] = 16
+            settings["mines"] = 40
+            break
+        elif difficulty == "h":
+            settings["width"] = 16
+            settings["height"] = 30
+            settings["mines"] = 99
+            break
+        elif difficulty == "c":
+            settings["width"] = 5
+            settings["height"] = 5
+            settings["mines"] = 25
+            break
+        else:
+            print("Incorrect choice")
+
+    settings["window_width"] = settings["width"]*40
+    settings["window_height"] = settings["height"]*40+40
+    create_field()
+    insert_mines()
+
     sweeperlib.load_sprites("sprites")
     sweeperlib.create_window(
         settings["window_width"], settings["window_height"], settings["background_color"]
@@ -143,10 +211,11 @@ def main():
     sweeperlib.set_interval_handler(interval_handler)
     sweeperlib.start()
 
-if __name__ == "__main__":
-    settings["window_width"] = settings["width"]*40
-    settings["window_height"] = settings["height"]*40+40
-    create_field()
-    insert_mines()
+def stats():
+    pass
 
-    main()
+if __name__ == "__main__":
+    try:
+        menu()
+    except KeyboardInterrupt:
+        print("\nProgram was interrupted with ctrl-c")
