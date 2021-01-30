@@ -8,6 +8,7 @@ Minesweeper game made with python, for University of Oulu Elementary Programming
 
 import random
 import sys
+import time
 from math import floor
 import sweeperlib
 
@@ -38,14 +39,12 @@ game_status = {
     "elapsed_time": 0
 }
 
-
 def mouse_handler(x, y, button, modifiers):
     print("Mouse {} clicked in {}, {}".format(button, x, y))
     column = floor(x / 40)
     row = floor(y / 40)
     if column < settings["width"] and row < settings["height"]:
         check_square(row, column, button)
-    
 
 def draw_handler():
     sweeperlib.clear_window()
@@ -70,10 +69,12 @@ def interval_handler(elapsed):
     if game_status["current_status"] == "good":
         print("YOU WON")
         game_status["shown_field"] == game_status["hidden_field"]
+        time.sleep(5)
         sweeperlib.close()
     if game_status["current_status"] == "bad":
         print("YOU LOST")
         game_status["shown_field"] == game_status["hidden_field"]
+        time.sleep(5)
         sweeperlib.close()
 
 def create_field():
@@ -149,18 +150,26 @@ def count_surroundings(x, y):
 
     return mines
 
+def reset_game_status():
+    game_status["current_status"] = ""
+    game_status["shown_field"] = []
+    game_status["hidden_field"] = []
+    game_status["mines_flagged"] = 0
+    game_status["elapsed_time"] = 0
+
+
 def menu():
     while True:
-        print("----------------MineSweeper----------------")
+        print("\n----------------MineSweeper----------------")
         print("(N)ew game")
         print("(S)tats")
         print("(Q)uit")
-        choice = input("Choose: ").strip().lower()
-        if choice == "n":
+        menu_choice = input("Choose: ").strip().lower()
+        if menu_choice == "n":
             game()
-        elif choice == "s":
+        elif menu_choice == "s":
             stats()
-        elif choice == "q":
+        elif menu_choice == "q":
             print("Thanks for playing!")
             break
         else:
@@ -173,29 +182,36 @@ def game():
         print("(M)edium - 16x16, 40 mines")
         print("(H)ard - 16x30, 99 mines")
         print("(C)ustom")
-        difficulty = input("Choose: ").strip().lower()
-        if difficulty == "e":
+        print("(B)ack to menu")
+        game_choice = input("Choose: ").strip().lower()
+        if game_choice == "e":
             settings["width"] = 9
             settings["height"] = 9
             settings["mines"] = 10
             break
-        elif difficulty == "m":
+        elif game_choice == "m":
             settings["width"] = 16
             settings["height"] = 16
             settings["mines"] = 40
             break
-        elif difficulty == "h":
+        elif game_choice == "h":
             settings["width"] = 16
             settings["height"] = 30
             settings["mines"] = 99
             break
-        elif difficulty == "c":
+        elif game_choice == "c":
             settings["width"] = 5
             settings["height"] = 5
             settings["mines"] = 25
             break
+        elif game_choice == "b":
+            return
         else:
             print("Incorrect choice")
+    
+    print("1",game_status)
+    reset_game_status()
+    print("2",game_status)
 
     settings["window_width"] = settings["width"]*40
     settings["window_height"] = settings["height"]*40+40
@@ -209,6 +225,8 @@ def game():
     sweeperlib.set_mouse_handler(mouse_handler)
     sweeperlib.set_draw_handler(draw_handler)
     sweeperlib.set_interval_handler(interval_handler)
+    print("3",game_status)
+
     sweeperlib.start()
 
 def stats():
