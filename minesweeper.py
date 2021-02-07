@@ -7,17 +7,15 @@ Minesweeper game made with python, for University of Oulu Elementary Programming
 """
 
 import random
-import sys
-import time
-import json
 from datetime import datetime
 from math import floor
 import sweeperlib
 
-# --settings and game_status--
-# Required variables for controlling game logic and state
-# Does what their name implies
-# Settings contain user defined settings
+"""
+settings, mouse_buttons and game_status
+Required variables for controlling game logic and state.
+Does what their name implies.
+"""
 settings = {
     "width": 0,
     "height": 0,
@@ -43,12 +41,29 @@ game_status = {
 }
 
 def mouse_handler(x, y, button, modifiers):
+    """
+    Handler function for mouse.
+    If mouse clicked inside playarea, calls check_square with coords.
+    More info on how this is used in sweeperlib.py.
+
+    param: x, y: x and y position of click
+    param: button: which button is clicked
+    param: modifiers: not used
+    """
+
     column = floor(x / 40)
     row = floor(y / 40)
     if column < settings["width"] and row < settings["height"]:
         check_square(row, column, button)
 
 def draw_handler():
+    """
+    Handler function for drawing.
+    Prepares sprites for shown_field, and draws them. 
+    Also draws clock and current game status.    
+    More info on how this is used in sweeperlib.py.
+    """
+
     sweeperlib.clear_window()
     sweeperlib.draw_background()
     sweeperlib.begin_sprite_draw()
@@ -73,6 +88,14 @@ def draw_handler():
 
     
 def interval_handler(elapsed):
+    """
+    Handler function for interval. 
+    Used for controlling game clock, with added logic for when to close the game.
+    More info on how this is used in sweeperlib.py.
+
+    param: elapsed: actual time elapsed
+    """
+
     if game_status["current_status"] == "In progress":
         game_status["elapsed_time"] += elapsed
     elif game_status["time_to_quit"] > 5:
@@ -82,15 +105,24 @@ def interval_handler(elapsed):
         game_status["time_to_quit"] += elapsed
 
 def create_field():
+    """
+    Creates 2 minefields, hidden and shown.
+    Hidden is used to get mine positions, and shown is used to show the field to the player without the mines.
+    """
+
     game_status["hidden_field"] = []
     for _ in range(settings["height"]):
         game_status["hidden_field"].append([])
         for _ in range(settings["width"]):
             game_status["hidden_field"][-1].append(" ")
 
-    game_status["shown_field"] = [row[:] for row in game_status["hidden_field"]]    # This, or deepcopy, or just call create_field again?
+    game_status["shown_field"] = [row[:] for row in game_status["hidden_field"]]
 
 def insert_mines():
+    """
+    Inserts mines to the hidden field. Positions are chosen randomly
+    """
+
     free_squares = []
     for x in range(settings["width"]):
         for y in range(settings["height"]):
@@ -103,6 +135,15 @@ def insert_mines():
         game_status["hidden_field"][y][x] = "x"
         
 def check_square(row, column, button):
+    """
+    Checks clicked square. 
+    Does different things depending on which mouse button is given, and what the square contains.
+
+    param: row: row position of click
+    param: column: column position of click
+    param: button: button used in click
+    """
+
     square = game_status["hidden_field"][row][column]
     if button == 1:
         if square == "x":
@@ -125,8 +166,13 @@ def check_square(row, column, button):
 
 def floodfill(starting_x, starting_y):
     """
-    Marks previously unknown connected areas as safe, starting from the given
-    x, y coordinates.
+    Using modified floodfill to open up playarea, minesweeper style.
+    Adds squares to be checked to checklist, 
+    calls count_surroundings to count number of mines,
+    and pops them off after check.
+
+    param: starting_x: x position on where to start
+    param: starting_y: y position on where to start
     """
 
     checklist = [(starting_x, starting_y)]
@@ -148,6 +194,12 @@ def floodfill(starting_x, starting_y):
                         checklist.append((j, i))
 
 def count_surroundings(x, y):
+    """
+    Counts how many mines surrounds the given position, and returns the value.
+
+    param: x, y: x and y position to check
+    """
+
     mines = 0
     for i in range(y-1, y+2):
         if i < 0 or i == settings["height"]:
@@ -161,6 +213,10 @@ def count_surroundings(x, y):
     return mines
 
 def reset_game_status():
+    """
+    Resets all game statuses to defaults
+    """
+
     game_status["current_status"] = "In progress"
     game_status["shown_field"] = []
     game_status["hidden_field"] = []
@@ -170,6 +226,10 @@ def reset_game_status():
 
 
 def menu():
+    """
+    Main menu for the game.
+    """
+
     while True:
         print("\n----------------MineSweeper----------------")
         print("(N)ew game")
@@ -187,6 +247,11 @@ def menu():
             print("Incorrect choice")
 
 def game():
+    """
+    New game menu. Depending on user input, creates minefield, 
+    attaches handlers to helper library and starts game.
+    """
+
     while True:
         print("\nDifficulty?")
         print("(E)asy - 9x9, 10 mines")
@@ -244,6 +309,10 @@ def game():
     sweeperlib.start()
 
 def save_stats():
+    """
+    Used to save statistics after game. Saves to stats.txt
+    """
+
     date_and_time = datetime.now().strftime("%d.%m.%Y %H:%M")
     m, s = divmod(int(game_status["elapsed_time"]), 60)
     game_time = "{:02d}:{:02d}".format(m, s)
@@ -261,6 +330,10 @@ def save_stats():
 
 
 def show_stats():
+    """
+    Used to show player the statistics of previously played games.
+    """
+
     try:
         with open("stats.txt") as file:
             loaded_stats = file.read()

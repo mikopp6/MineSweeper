@@ -1,9 +1,0 @@
-{'Date and time': '07.02.2021 13:55', 'Duration': '00:01', 'Outcome': 'You lost!', 'Mines flagged': '0/10'}
-{'Date and time': '07.02.2021 13:56', 'Duration': '00:02', 'Outcome': 'You lost!', 'Mines flagged': '0/10'}
-{'Date and time': '07.02.2021 13:57', 'Duration': '00:03', 'Outcome': 'You lost!', 'Mines flagged': '0/10'}
-{'Date and time': '07.02.2021 14:01', 'Duration': '00:10', 'Outcome': 'You lost!', 'Mines flagged': '0/10'}
-{'Date and time': '07.02.2021 14:04', 'Duration': '00:02', 'Outcome': 'You lost!', 'Mines flagged': '0/10'}
-{'Date and time': '07.02.2021 14:05', 'Duration': '00:02', 'Outcome': 'You lost!', 'Mines flagged': '0/10'}
-{'Date and time': '07.02.2021 14:05', 'Duration': '00:05', 'Outcome': 'You lost!', 'Mines flagged': '0/10'}
-{'Date and time': '07.02.2021 14:05', 'Duration': '00:01', 'Outcome': 'You lost!', 'Mines flagged': '0/10'}
-{'Date and time': '07.02.2021 14:06', 'Duration': '00:00', 'Outcome': 'You lost!', 'Mines flagged': '0/10'}
