@@ -10,7 +10,7 @@ import random
 import sys
 import time
 import json
-from datetime import datetime, timedelta
+from datetime import datetime
 from math import floor
 import sweeperlib
 
@@ -39,7 +39,7 @@ game_status = {
     "hidden_field": [],
     "mines_flagged": 0,
     "elapsed_time": 0,
-    "time_to_quit": 9999
+    "time_to_quit": 0
 }
 
 def mouse_handler(x, y, button, modifiers):
@@ -75,12 +75,11 @@ def draw_handler():
 def interval_handler(elapsed):
     if game_status["current_status"] == "In progress":
         game_status["elapsed_time"] += elapsed
-
-    if game_status["elapsed_time"] >= game_status["time_to_quit"]:
-        sweeperlib.close()  
-    elif game_status["current_status"] != "In progress" and game_status["time_to_quit"] == 9999:
-        game_status["time_to_quit"] = game_status["elapsed_time"] + 5
+    elif game_status["time_to_quit"] > 5:
         save_stats()
+        sweeperlib.close()  
+    elif game_status["current_status"] != "In progress":
+        game_status["time_to_quit"] += elapsed
 
 def create_field():
     game_status["hidden_field"] = []
@@ -107,7 +106,7 @@ def check_square(row, column, button):
     square = game_status["hidden_field"][row][column]
     if button == 1:
         if square == "x":
-            game_status["shown_field"][row][column] = "x"
+            game_status["shown_field"] = game_status["hidden_field"]
             game_status["current_status"] = "You lost!"
         elif square == " ":
             floodfill(column, row)
@@ -167,7 +166,7 @@ def reset_game_status():
     game_status["hidden_field"] = []
     game_status["mines_flagged"] = 0
     game_status["elapsed_time"] = 0
-    game_status["time_to_quit"] = 9999
+    game_status["time_to_quit"] = 0
 
 
 def menu():
@@ -188,8 +187,6 @@ def menu():
             print("Incorrect choice")
 
 def game():
-    reset_game_status()
-
     while True:
         print("\nDifficulty?")
         print("(E)asy - 9x9, 10 mines")
@@ -221,48 +218,54 @@ def game():
             except ValueError:
                 print("Please input whole numbers only!")
             else:
-                break
+                if settings["mines"] == 0:
+                    print("Not enough mines!")
+                elif settings["mines"] > settings["height"]*settings["width"]:
+                    print("Too many mines!")
+                else:
+                    break
         elif game_choice == "b":
             return
         else:
             print("Incorrect choice")
     
+    reset_game_status()
     settings["window_width"] = settings["width"]*40
     settings["window_height"] = settings["height"]*40+40
+
     create_field()
     insert_mines()
 
     sweeperlib.load_sprites("sprites")
-    sweeperlib.create_window(
-        settings["window_width"], settings["window_height"], settings["background_color"]
-    )
+    sweeperlib.create_window(settings["window_width"], settings["window_height"], settings["background_color"])
     sweeperlib.set_mouse_handler(mouse_handler)
     sweeperlib.set_draw_handler(draw_handler)
     sweeperlib.set_interval_handler(interval_handler)
     sweeperlib.start()
 
 def save_stats():
-    game_time = "{:.0f}".format(timedelta(seconds=game_status["elapsed_time"]))
+    date_and_time = datetime.now().strftime("%d.%m.%Y %H:%M")
+    m, s = divmod(int(game_status["elapsed_time"]), 60)
+    game_time = "{:02d}:{:02d}".format(m, s)
     mine_status = "{}/{}".format(game_status["mines_flagged"], settings["mines"])
-    date_and_time = datetime.now().strftime("$D.$M.$Y %H:%M")
-
+    
     game_statistics = {
-        "Date and time: ": date_and_time,
-        "Duration: ": game_time,
-        "Outcome: ": game_status["current_status"],
-        "Mines flagged: ": mine_status
+        "Date and time": date_and_time,
+        "Duration": game_time,
+        "Outcome": game_status["current_status"],
+        "Mines flagged": mine_status
     }
 
-    with open("stats.json", "w") as file:
-        json.dump(game_statistics, file, indent=2)
+    with open("stats.txt", "a+") as file:
+        file.write(str(game_statistics) + "\n")
 
 
 def show_stats():
     try:
-        with open("stats.json") as file:
-            loaded_stats = json.load(file)
-    except (IOError, json.JSONDecodeError):
-        print("Unable to find stats.json, try playing first?")
+        with open("stats.txt") as file:
+            loaded_stats = file.read()
+    except (IOError):
+        print("Unable to find stats.txt, try playing first?")
     else:
         print(loaded_stats)
 
